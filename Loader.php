@@ -52,7 +52,7 @@ class Loader {
 		unset($namespaces[0]);
 		$file = __DIR__.'/'.implode('/', $namespaces).'.php';
 		
-		if (!is_readable($file)) {
+		if (!is_file($file)) {
 			throw new \Exception('Unable to read file. '.$file);
 		}
 		
