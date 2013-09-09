@@ -21,7 +21,10 @@ namespace Lighter\Console;
 class Application {
 	
 	public function start() {
-	
+		
+		// register autoload
+		spl_autoload_register(array(__CLASS__, 'load'));
+		
 		// defaults
 		$controller = 'Index';
 		$function = 'index';
@@ -44,5 +47,21 @@ class Application {
 		}
 		
 		$object->$function();
+	}
+	
+	public function load($class) {
+		
+		$file = str_replace('\\', '/', $class);
+		$items = explode('/', $file);
+		
+		if (in_array($items[0], array('Controller','Model','View')) == false) {
+			return false;
+		}
+		
+		if (is_readable(APPLICATION_PATH.'/'.$file.'.php') == false) {
+			throw new \Exception('Unable to read file. '.$file);
+		}
+		
+		return require_once(APPLICATION_PATH.'/'.$file.'.php');
 	}
 }
