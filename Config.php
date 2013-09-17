@@ -23,8 +23,9 @@ class Config {
 	private $data;
 	
 	public function open($namespace) {
-		if (isset($_ENV[$namespace])) {
-			$this->data = $_ENV[$namespace];
+		$data = include(APPLICATION_PATH.'/data/config.php');
+		if (isset($data[$namespace])) {
+			$this->data = $data[$namespace];
 		}
 	}
 	
