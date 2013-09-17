@@ -37,7 +37,7 @@ class Console {
 			array_unshift($arguments, $debugInfo);
 		}
 		
-		$info =  date('His').' INFO '.implode(' ', $arguments);
+		$info =  date('H:i:s').' INFO '.implode(' ', $arguments);
 		echo $info."\n";
 	}
 	
@@ -51,6 +51,23 @@ class Console {
 	
 	public static function warn() {
 		
+		$arguments = func_get_args();
+		$debug = debug_backtrace();
+		$debugInfo = '';
+		$fileLog = APPLICATION_PATH.'\data\\'.$_SERVER['REQUEST_TIME'].'.log';
+		
+		if (isset($debug[1])){
+			if (isset($debug[1]['class'])){
+				$debugInfo .= ' '.$debug[1]['class'];
+			}
+			if (isset($debug[1]['function'])){
+				$debugInfo .= ' '.$debug[1]['function'];
+			}
+			array_unshift($arguments, $debugInfo);
+		}
+		
+		$info =  date('H:i:s').' WARN '.implode(' ', $arguments);
+		echo $info."\n";
 	}
 	
 	public static function log() {
