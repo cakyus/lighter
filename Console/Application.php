@@ -58,7 +58,7 @@ class Application {
 			return false;
 		}
 		
-		if (is_readable(APPLICATION_PATH.'/'.$file.'.php') == false) {
+		if (is_file(APPLICATION_PATH.'/'.$file.'.php') == false) {
 			throw new \Exception('Unable to read file. '.$file);
 		}
 		
