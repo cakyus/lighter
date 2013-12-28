@@ -69,8 +69,8 @@ class Application {
 		}
 
         // class and function name validation
-        if (    preg_match("/^[a-z][a-z0-9]+$/", $controller)
-            &&  preg_match("/^[a-z][a-z0-9]+$/", $function)
+        if (    preg_match("/^[a-z][a-zA-Z0-9]+$/", $controller)
+            &&  preg_match("/^[a-z][a-zA-Z0-9]+$/", $function)
             ) {
             // do nothing
         } else {
