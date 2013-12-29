@@ -78,6 +78,8 @@ class Request {
 			return $result;
 		}
 
+		\Lighter\Logger::debug('Cached', $this->method, $this->url);
+
 		$content = file_get_contents($file);
 		$object = unserialize($content);
 
