@@ -21,6 +21,7 @@ namespace Lighter\Database;
 class Model {
 
 	private $schema;
+	private $queryResult;
 
 	public function __construct() {
 		$this->schema = new Table;
@@ -142,5 +143,31 @@ class Model {
 		} else {
 			return $this->put();
 		}
+	}
+
+	public function fetch() {
+		
+		$db = new Connection;
+
+		if (is_null($this->queryResult)) {
+			if ($queryResult = $db->query(
+				'SELECT * FROM `'.$this->schema->name.'`'
+				)) {
+				$this->queryResult = $queryResult;
+			}
+		}
+
+		if ($result = current($this->queryResult)) {
+			next($this->queryResult);
+
+			foreach ($result as $name => $value) {
+				$this->$name = $value;
+			}
+
+			return $this;
+		}
+
+		$this->queryResult = NULL;
+		return FALSE;
 	}
 }
