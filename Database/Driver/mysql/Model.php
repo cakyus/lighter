@@ -65,6 +65,30 @@ class Model {
 
 	public function set() {
 
+		$db = new Connection;
+		
+		$sql  = 'UPDATE `'.$this->schema->name.'` SET ';
+		$sqlColumns = array();
+		$indexPrimaryColumns = $this->getIndexPrimaryColumns();
+		foreach ($this->schema->columns as $column) {
+			if (in_array($column['name'], $indexPrimaryColumns)) {
+				continue;
+			} elseif (in_array($column['type'], array('TIMESTAMP'))) {
+				continue;
+			} elseif (	isset($column['autoincrement'])
+				&&	$column['autoincrement'] == TRUE
+				) {
+				continue;
+			}
+			
+			$sqlColumns[] = '`'.$column['name'].'` = '
+				.$this->getSqlColumnEscape($column)
+				;
+		}
+		$sql .= implode(' ,', $sqlColumns);
+		$sql .= $this->getSqlWherePrimary();
+
+		return $db->exec($sql);
 	}
 
 	public function del() {
@@ -74,27 +98,8 @@ class Model {
 	public function get() {
 
 		$db = new Connection;
-		$sql = 'SELECT * FROM `'.$this->schema->name.'` WHERE ';
-
-		// get primary key
-		foreach ($this->schema->indexes as $index) {
-			if ($index['type'] != 'PRIMARY') { continue; }
-			foreach ($index['columns'] as $columnName) {
-				$sql .= '`'.$columnName.'` = ';
-				foreach ($this->schema->columns as $column) {
-					if ($column['name'] != $columnName) { continue; }
-					if (in_array($column['type'], array(
-						'TEXT', 'CHAR', 'VARCHAR'
-						))) {
-						$sql .= $db->escape($this->$columnName);
-					} else {
-						$sql .= $this->$columnName;
-					}
-					break;
-				}
-			}
-			break;
-		}
+		$sql  = 'SELECT * FROM `'.$this->schema->name.'` ';
+		$sql .= $this->getSqlWherePrimary();
 
 		try {
 			$recordset = $db->query($sql);
@@ -116,6 +121,50 @@ class Model {
 		}
 
 		return $object;
+	}
+
+	private function getColumnByName($columnName) {
+		foreach ($this->schema->columns as $column) {
+			if ($column['name'] == $columnName) {
+				return $column;
+			}
+		}
+		return FALSE;
+	}
+
+	private function getSqlColumnEscape($column) {
+		
+		$db = new Connection;
+		$columnName = $column['name'];
+		
+		if (in_array($column['type'], array(
+			'TEXT', 'CHAR', 'VARCHAR'
+			))) {
+			return $db->escape($this->$columnName);
+		} else {
+			return $this->$columnName;
+		}		
+	}
+
+	private function getSqlWherePrimary() {
+
+		$sql = ' WHERE ';
+
+		foreach ($this->getIndexPrimaryColumns() as $columnName) {
+			$sql .= '`'.$columnName.'` = ';
+			$column = $this->getColumnByName($columnName);
+			$sql .= $this->getSqlColumnEscape($column);
+		}
+
+		return $sql;
+	}
+
+	private function getIndexPrimaryColumns() {
+		foreach ($this->schema->indexes as $index) {
+			if ($index['type'] != 'PRIMARY') { continue; }
+			return $index['columns'];
+		}
+		return array();
 	}
 
 	/**
