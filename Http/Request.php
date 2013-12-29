@@ -38,8 +38,11 @@ class Request {
     private $sendTimeout;
     private $receiveTimeout;
 
+    public $useCache;
+
     public function __construct() {
         $this->responseHeaders = array();
+        $this->useCache = false;
     }
 
     public function open($method, $url) {
@@ -55,6 +58,46 @@ class Request {
     }
 
     public function send($body=null) {
+		
+		if ($this->useCache == FALSE) {
+			return $this->sendRequest($body);
+		}
+
+		$file = $this->getCacheFile($body);
+		if (is_file($file) == FALSE) {
+			
+			$result = $this->sendRequest($body);
+			
+			$object = new \stdClass;
+			$object->status = $this->status;
+			$object->responseText = $this->responseText;
+			$object->responseHeaderText = $this->responseHeaderText;
+			$object->result = $result;
+
+			file_put_contents($file, serialize($object));
+			return $result;
+		}
+
+		$content = file_get_contents($file);
+		$object = unserialize($content);
+
+		$this->status = $object->status;
+		$this->responseText = $object->responseText;
+		$this->responseHeaderText = $object->responseHeaderText;
+
+		return $object->result;
+	}
+
+	private function getCacheFile($body) {
+		$requestId = $this->method.$this->url;
+		if (is_null($body) == FALSE) {
+			$requestId .= $body;
+		}
+		$requestId = md5($requestId);
+		return sys_get_temp_dir().'/Cache_'.$requestId;
+	}
+
+    private function sendRequest($body=null) {
 
         \Lighter\Logger::debug($this->method, $this->url);
 
